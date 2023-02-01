@@ -1,34 +1,62 @@
 import React from 'react'
+import { connect } from 'react-redux'
+import { fetchQuiz, selectAnswer, setMessage } from '../state/action-creators';
 
-export default function Quiz(props) {
+function Quiz(props) {
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if(props.quiz.answers[0].answer_id === props.selected) {
+      props.setMessage("Nice job! That was the correct answer");
+    } else {
+      props.setMessage("What a shame! That was the incorrect answer")
+    }
+    props.fetchQuiz();
+    props.selectAnswer(null);
+  }
+
   return (
-    <div id="wrapper">
+    <div id="wrapper" key={props.quiz ? props.quiz.quiz_id : ""}>
       {
         // quiz already in state? Let's use that, otherwise render "Loading next quiz..."
-        true ? (
+        props.quiz ? (
           <>
-            <h2>What is a closure?</h2>
+            <h2>{props.quiz.question}</h2>
 
             <div id="quizAnswers">
-              <div className="answer selected">
-                A function
-                <button>
-                  SELECTED
+              <div className={`answer ${props.quiz.answers[0].answer_id === props.selected ? "selected" : ""}`} key={props.quiz.answers[0].answer_id}>
+                {props.quiz.answers[0].text}
+                <button onClick={() => props.selectAnswer(props.quiz.answers[0].answer_id)}>
+                  {props.quiz.answers[0].answer_id === props.selected ? "SELECTED" : "select"}
                 </button>
               </div>
 
-              <div className="answer">
-                An elephant
-                <button>
-                  Select
+              <div className={`answer ${props.quiz.answers[1].answer_id === props.selected ? "selected" : ""}`} key={props.quiz.answers[1].answer_id}>
+              {props.quiz.answers[1].text}
+                <button onClick={() => props.selectAnswer(props.quiz.answers[1].answer_id)}>
+                 {props.quiz.answers[1].answer_id === props.selected ? "SELECTED" : "select"}
                 </button>
               </div>
             </div>
 
-            <button id="submitAnswerBtn">Submit answer</button>
+            <button id="submitAnswerBtn" onClick={handleSubmit} disabled={!props.selected}>Submit answer</button>
           </>
-        ) : 'Loading next quiz...'
+        ) : (
+          <>
+          {props.fetchQuiz()}
+          Loading next question...
+          </>
+        )
       }
     </div>
   )
 }
+
+const mapStateToProps = state => {
+  return {
+    quiz: state.quiz,
+    selected: state.selectedAnswer,
+  }
+}
+
+export default connect(mapStateToProps, {fetchQuiz, selectAnswer, setMessage})(Quiz);
